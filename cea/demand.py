@@ -147,6 +147,7 @@ def analytical(path_radiation, path_schedules, path_temporary_folder, path_weath
     buildings = all_properties.Name.count()
     list_buildings =  range(buildings) #buildings
     for building in list_buildings:
+        #This is the function that calculated the building thermal loads
         total = f.CalcThermalLoads(
             building,
             all_properties.ix[building],

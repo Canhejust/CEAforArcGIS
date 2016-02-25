@@ -120,6 +120,7 @@ def CmFunction (x):
         return 165000
 
 def CalcIncidentRadiation(AllProperties, Radiation_Shading2):
+    #Apparently this is a bottleneck, but it still probably faster than ladybug
 
     #Import Radiation table and compute the Irradiation in W in every building's surface
     Columns = 8761
@@ -156,7 +157,8 @@ def Calc_form(Lw,Ll,footprint):
     return factor
 
 def Calc_Tm(Htr_3,Htr_1,tm_t0,Cm,Htr_em,Im_tot,Htr_ms,I_st,Htr_w,te_t,I_ia,IHC_nd,Hve,Htr_is):
-    tm_t = (tm_t0 *((Cm/3600)-0.5*(Htr_3+ Htr_em))+ Im_tot)/((Cm/3600)+0.5*(Htr_3+Htr_em))
+    #This is where the linear equations are. Jimeons code only assumes a single capacitance so doesn't require any state space solving
+    tm_t = (tm_t0 *((Cm/3600)-0.5*(Htr_3+ Htr_em))+ Im_tot)/((Cm/3600)+0.5*(Htr_3+Htr_em)) #Need reference /derrivation of this equation
     tm = (tm_t+tm_t0)/2
     ts = (Htr_ms * tm + I_st + Htr_w*te_t + Htr_1*(te_t+(I_ia+IHC_nd)/Hve))/(Htr_ms+Htr_w+Htr_1)
     ta = (Htr_is*ts + Hve*te_t + I_ia + IHC_nd)/(Htr_is+Hve)
@@ -197,7 +199,8 @@ def calc_mixed_schedule(Profiles, Profiles_names, AllProperties, te):
     return ta_hs_set,ta_cs_set,people,ve,q_int,Eal_nove,Eal_ve/2,mww,mw, w_int, hour #divided in two because in the scehdules the
     #load of the ventilator per m3/h is computed as 2 (an error!). here we skip it.
 
-def calc_Htr(Hve, Htr_is, Htr_ms, Htr_w):
+def calc_Htr(Hve, Htr_is, Htr_ms, Htr_w): 
+    #Adding resistances together using the parralel theorem
     Htr_1 = 1/(1/Hve+1/Htr_is)
     Htr_2 = Htr_1+Htr_w
     Htr_3 = 1/(1/Htr_2+1/Htr_ms)
@@ -231,6 +234,8 @@ def Calc_Im_tot(I_m,Htr_em,te_t,Htr_3,I_st,Htr_w,Htr_1,I_ia,IHC_nd,Hve,Htr_2):
 
 def calc_TL(SystemH, SystemC, te_min, te_max, tm_t0, te_t, tintH_set, tintC_set, Htr_em, Htr_ms, Htr_is, Htr_1, Htr_2, Htr_3, 
             I_st, Hve, Htr_w, I_ia, I_m, Cm, Af, Losses, tHset_corr,tCset_corr, IC_max,IH_max, Flag):
+
+    #This is important but wtf is it doing??
     # assumptions
     if Losses == 1:
         #Losses due to emission and control of systems
@@ -391,6 +396,7 @@ def CalcThermalLoads(k, prop, Solar, locationFinal, Profiles,
                      Profiles_names, T_ext, T_ext_max, RH_ext,
                      T_ext_min, path_temporary_folder, gv, servers ,coolingroom):
 
+    #Function to calculate the energy consumption of a single building
 
                    # g_gl, F_f,Bf,D,hf,Pwater,PaCa,Cpw, Flowtap, deltaP_l, fsr,nrec_N,C1,Vmax,Pair,Cpv,Cpa,lvapor,servers ,coolingroom):                 
     Af = prop.Af
@@ -420,7 +426,7 @@ def CalcThermalLoads(k, prop, Solar, locationFinal, Profiles,
         Cm = prop.Cm
 
         Y = calc_Y(Year,Retrofit) # linear trasmissivity coefficeitn of piping W/(m.K)
-        # nominal temperatures
+        # nominal temperatures. Ask Jimeno what these temperatures exactly refer to
         Ths_sup_0 = prop.tshs0
         Ths_re_0 = prop.trhs0
         Tcs_sup_0 = prop.tscs0
