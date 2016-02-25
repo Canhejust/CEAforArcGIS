@@ -21,7 +21,7 @@ import os
 gv = globalvar.GlobalVariables()
 reload(f)
 
-
+#Stuff for ArchGIS
 class DemandTool(object):
 
     def __init__(self):
