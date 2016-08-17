@@ -42,13 +42,13 @@ def calc_PV(locator, sensors_data, radiation, latitude, longitude, year, gv, wea
     # read radiation file
     hourly_data = pd.read_csv(radiation)
 
-    # get only datapoints with production beyond min_production
+    # get only data points with production beyond min_production
     Max_Isol = hourly_data.total.max()
     Min_Isol = Max_Isol * gv.min_production  # 80% of the local average maximum in the area
     sensors_data_clean = sensors_data[sensors_data["total"] > Min_Isol]
     radiation_clean = radiation.loc[radiation['sensor_id'].isin(sensors_data_clean.sensor_id)]
 
-    # get only datapoints with aminimum 50 W/m2 of radiation for energy production
+    # get only data points with a minimum radiation of 50 W/m2 for energy production
     radiation_clean[radiation_clean[:] <= 50] = 0
 
     # calculate optimal angle and tilt for panels
@@ -118,7 +118,36 @@ def Calc_diffuseground_comp(tilt_radians):
     return radians(teta_ed), radians(teta_eG)
 
 def Calc_Sm_PV(te, I_sol, I_direct, I_diffuse, tilt, Sz, teta, tetad, tetaeg,
-               n, Pg, K, NOCT, a0, a1, a2, a3, a4, L):  # ha is local solar time
+               n, Pg, K, NOCT, a0, a1, a2, a3, a4, L):
+    """
+
+    Parameters
+    ----------
+    te
+    I_sol
+    I_direct
+    I_diffuse
+    tilt
+    Sz
+    teta
+    tetad
+    tetaeg
+    n
+    Pg
+    K
+    NOCT
+    a0
+    a1
+    a2
+    a3
+    a4
+    L
+
+    Returns
+    -------
+
+    """
+    # ha is local solar time
 
 
     # calcualte ratio of beam radiation on a tilted plane

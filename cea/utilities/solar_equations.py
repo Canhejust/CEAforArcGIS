@@ -102,6 +102,19 @@ solar properties
 """
 
 def calc_sun_properties(latitude, longitude, weather_data, gv):
+    """
+
+    Parameters
+    ----------
+    latitude
+    longitude
+    weather_data
+    gv
+
+    Returns
+    -------
+
+    """
 
     date = pd.date_range(gv.date_start, periods=8760, freq='H')
 
