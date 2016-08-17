@@ -53,7 +53,7 @@ def calc_PV(locator, sensors_data, radiation, latitude, longitude, year, gv, wea
 
     # calculate optimal angle and tilt for panels
     optimal_angle_and_tilt(sensors_data, latitude, worst_sh, worst_Az, trr_mean, gv.grid_side,
-                           gv.module_lenght_PV, gv.angle_north, Min_Isol, Max_Isol)
+                           gv.module_length_PV, gv.angle_north, Min_Isol, Max_Isol)
 
     Number_groups, hourlydata_groups, number_points, prop_observers = calc_groups(radiation_clean, sensors_data_clean)
 

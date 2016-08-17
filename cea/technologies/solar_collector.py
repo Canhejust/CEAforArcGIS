@@ -54,7 +54,7 @@ def calc_SC(locator, sensors_data, radiation, latitude, longitude, year, gv, wea
 
     # calculate optimal angle and tilt for panels
     optimal_angle_and_tilt(sensors_data, latitude, worst_sh, worst_Az, trr_mean, gv.grid_side,
-                           gv.module_lenght_SC, gv.angle_north, Min_Isol, Max_Isol)
+                           gv.module_length_SC, gv.angle_north, Min_Isol, Max_Isol)
 
     Number_groups, hourlydata_groups, number_points, prop_observers = calc_groups(radiation_clean, sensors_data_clean)
 
@@ -80,7 +80,7 @@ def SC_generation(type_SCpanel, group_radiation, prop_observers, number_points, 
     Sum_qloss = np.zeros(8760)
     Tin_array = np.zeros(8760)+ Tin
     Sum_Area_m = (prop_observers['area_netpv']*number_points).sum()
-    lv = 2 # grid lenght module length
+    lv = 2 # grid length module length
     Le = (2*lv*number_points.sum())/(Sum_Area_m*Aratio)
     Li = 2*height/(Sum_Area_m*Aratio)
     Leq = Li+Le # in m/m2
@@ -562,7 +562,7 @@ optimal angle and tilt
 """
 
 def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmittivity,
-                           grid_side, module_lenght, angle_north, Min_Isol, Max_Isol):
+                           grid_side, module_length, angle_north, Min_Isol, Max_Isol):
 
     def Calc_optimal_angle(teta_z, latitude, transmissivity):
         """
@@ -598,9 +598,9 @@ def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmit
         Parameters
         ----------
         Sh:
-        Az
-        tilt_angle:
-        module_length
+        Az: Surface azimuth in [degree]
+        tilt_angle: optimal tilt angle for panels on tilt surfaces in [degree]
+        module_length:
 
         Returns
         -------
@@ -612,6 +612,20 @@ def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmit
         return D
 
     def Calc_categoriesroof(teta_z, B, GB, Max_Isol):
+        """
+        Categorize the panels according to the their azimuths and slopes.
+
+        Parameters
+        ----------
+        teta_z
+        B
+        GB
+        Max_Isol: Highest yearly surface insulation within the district
+
+        Returns
+        -------
+
+        """
         if -122.5 < teta_z <= -67:
             CATteta_z = 1
         elif -67 < teta_z <= -22.5:
@@ -626,19 +640,19 @@ def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmit
         if 0 < B <= 5:
             CATB = 1  # flat roof
         elif 5 < B <= 15:
-            CATB = 2  # tilted 25 degrees
+            CATB = 2  # tilted 5-15 degrees
         elif 15 < B <= 25:
-            CATB = 3  # tilted 25 degrees
+            CATB = 3  # tilted 15-25 degrees
         elif 25 < B <= 40:
-            CATB = 4  # tilted 25 degrees
+            CATB = 4  # tilted 25-40 degrees
         elif 40 < B <= 60:
-            CATB = 5  # tilted 25 degrees
+            CATB = 5  # tilted 40-60 degrees
         elif B > 60:
-            CATB = 6  # tilted 25 degrees
+            CATB = 6  # tilted >60 degrees
 
         GB_percent = GB / Max_Isol
         if 0 < GB_percent <= 0.25:
-            CATGB = 1  # flat roof
+            CATGB = 1
         elif 0.25 < GB_percent <= 0.50:
             CATGB = 2
         elif 0.50 < GB_percent <= 0.75:
@@ -652,7 +666,7 @@ def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmit
 
     # calculate values for flat roofs Slope < 5 degrees.
     optimal_angle_flat = Calc_optimal_angle(0, latitude, transmittivity)
-    optimal_spacing_flat = Calc_optimal_spacing(worst_sh, worst_Az, optimal_angle_flat, module_lenght)
+    optimal_spacing_flat = Calc_optimal_spacing(worst_sh, worst_Az, optimal_angle_flat, module_length)
     arcpy.AddField_management(observers_all, "array_s", "DOUBLE")
     arcpy.AddField_management(observers_all, "area_netpv", "DOUBLE")
     arcpy.AddField_management(observers_all, "CATB", "SHORT")
@@ -664,7 +678,7 @@ def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmit
         for row in cursor:
             aspect = row[0]
             slope = row[1]
-            if slope > 5:  # not a flat roof.
+            if slope > 5:  # not a flat roof, panel tilt angle is the same as the slope of the surface
                 B = slope
                 array_s = 0
                 if 180 <= aspect < 360:  # convert the aspect of arcgis to azimuth
