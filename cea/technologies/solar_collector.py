@@ -90,7 +90,7 @@ def SC_generation(type_SCpanel, group_radiation, prop_observers, number_points, 
         Nseg = 10 # default number of subsdivisions for the calculation
 
     for group in range(listgroups):
-        teta_z = prop_observers.loc[group,'aspect'] #azimuth of paneles of group
+        teta_z = prop_observers.loc[group,'aspect'] #azimuth of panel s of group
         Area_group = prop_observers.loc[group,'area_netpv']*number_points[group]
         tilt_angle = prop_observers.loc[group,'slope'] #tilt angle of panels
         radiation = pd.DataFrame({'I_sol':group_radiation[group]}) #choose vector with all values of Isol
@@ -565,22 +565,48 @@ def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmit
                            grid_side, module_lenght, angle_north, Min_Isol, Max_Isol):
 
     def Calc_optimal_angle(teta_z, latitude, transmissivity):
+        """
+
+        Parameters
+        ----------
+        teta_z: surface azimuth, the panel orientation in [degree]
+        latitude: [degree]
+        transmissivity:
+
+        Returns
+        -------
+        degrees(b): optimal panel tilt angle in [degree]
+        """
+
         if transmissivity <= 0.15:
             gKt = 0.977
         elif 0.15 < transmissivity <= 0.7:
             gKt = 1.237 - 1.361 * transmissivity
         else:
             gKt = 0.273
-        Tad = 0.98
+        Tad = 0.98  # Incident angle of direct radiation in [rad]
         Tar = 0.97
         Pg = 0.2  # ground reflectance of 0.2
         l = radians(latitude)
-        a = radians(teta_z)  # this is surface azimuth
+        a = radians(teta_z)
         b = atan((cos(a) * tan(l)) * (1 / (1 + ((Tad * gKt - Tar * Pg) / (2 * (1 - gKt))))))
         return degrees(b)
 
-    def Calc_optimal_spacing(Sh, Az, tilt_angle, module_lenght):
-        h = module_lenght * sin(radians(tilt_angle))
+    def Calc_optimal_spacing(Sh, Az, tilt_angle, module_length):
+        """
+
+        Parameters
+        ----------
+        Sh:
+        Az
+        tilt_angle:
+        module_length
+
+        Returns
+        -------
+        D: optimal distance
+        """
+        h = module_length * sin(radians(tilt_angle))
         D1 = h / tan(radians(Sh))
         D = max(D1 * cos(radians(180 - Az)), D1 * cos(radians(Az - 180)))
         return D
@@ -638,7 +664,7 @@ def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmit
         for row in cursor:
             aspect = row[0]
             slope = row[1]
-            if slope > 5:  # no t a flat roof.
+            if slope > 5:  # not a flat roof.
                 B = slope
                 array_s = 0
                 if 180 <= aspect < 360:  # convert the aspect of arcgis to azimuth
@@ -657,8 +683,8 @@ def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmit
                 else:
                     cursor.deleteRow()
             else:
-                teta_z = 0  # flat surface, all panels will be oriented towards south # optimal angle in degrees
-                B = optimal_angle_flat
+                teta_z = 0  # flat surface, all panels will be oriented towards south
+                B = optimal_angle_flat  # optimal angle in degrees
                 array_s = optimal_spacing_flat
                 if row[2] > Min_Isol:
                     row[0] = teta_z
