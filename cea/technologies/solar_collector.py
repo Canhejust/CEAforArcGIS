@@ -566,12 +566,13 @@ def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmit
 
     def Calc_optimal_angle(teta_z, latitude, transmissivity):
         """
+        Using the azimuth angle of the panels and mean transmissivity to determine the
 
         Parameters
         ----------
         teta_z: surface azimuth, the panel orientation in [degree]
         latitude: [degree]
-        transmissivity:
+        transmissivity: mean hourly transmissivity of the sensor point
 
         Returns
         -------
@@ -594,17 +595,18 @@ def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmit
 
     def Calc_optimal_spacing(Sh, Az, tilt_angle, module_length):
         """
+        Calculate optimal spacing at the worst hour (longest shadow).
 
         Parameters
         ----------
-        Sh:
-        Az: Surface azimuth in [degree]
-        tilt_angle: optimal tilt angle for panels on tilt surfaces in [degree]
-        module_length:
+        Sh: Solar elevation at the worst hour [degree]
+        Az: azimuth in [degree]
+        tilt_angle: optimal tilt angle for panels on flat surfaces in [degree]
+        module_length: in [m]
 
         Returns
         -------
-        D: optimal distance
+        D: optimal distance in [m]
         """
         h = module_length * sin(radians(tilt_angle))
         D1 = h / tan(radians(Sh))
@@ -613,13 +615,13 @@ def optimal_angle_and_tilt(observers_all, latitude, worst_sh, worst_Az, transmit
 
     def Calc_categoriesroof(teta_z, B, GB, Max_Isol):
         """
-        Categorize the panels according to the their azimuths and slopes.
+        Categorize the panels according to the their surface azimuths and slopes.
 
         Parameters
         ----------
-        teta_z
-        B
-        GB
+        teta_z: azimuth angle [degree]
+        B: tilt angle [degree]
+        GB: hourly insulation
         Max_Isol: Highest yearly surface insulation within the district
 
         Returns

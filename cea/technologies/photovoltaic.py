@@ -31,6 +31,26 @@ PV electricity generation
 """
 
 def calc_PV(locator, sensors_data, radiation, latitude, longitude, year, gv, weather_path):
+    """
+    This function first determine the surface area with sufficient solar radiation, and then decide the optimal tilt
+    angles of panels at each surface location. The panels are categorized by their azimuths and tilt angles into groups
+    of panels. The energy generation from PV panels of each group is then calculated.
+
+    Parameters
+    ----------
+    locator
+    sensors_data: hourly radiation of each sensor point
+    radiation: average hourly radiation of each surfaces
+    latitude
+    longitude
+    year
+    gv
+    weather_path
+
+    Returns
+    -------
+
+    """
 
     # weather data
     weather_data = epwreader.epw_reader(weather_path)
@@ -38,13 +58,12 @@ def calc_PV(locator, sensors_data, radiation, latitude, longitude, year, gv, wea
     # solar properties
     g, Sz, Az, ha, trr_mean, worst_sh, worst_Az = solar_equations.calc_sun_properties(latitude, longitude, weather_data,
                                                                                       gv)
-
     # read radiation file
     hourly_data = pd.read_csv(radiation)
 
-    # get only data points with production beyond min_production
+    # get only data points with yearly production beyond min_production
     Max_Isol = hourly_data.total.max()
-    Min_Isol = Max_Isol * gv.min_production  # 80% of the local average maximum in the area
+    Min_Isol = Max_Isol * gv.min_production  # minimum % of the local average maximum in the area
     sensors_data_clean = sensors_data[sensors_data["total"] > Min_Isol]
     radiation_clean = radiation.loc[radiation['sensor_id'].isin(sensors_data_clean.sensor_id)]
 
@@ -105,7 +124,7 @@ def Calc_pv_generation(type_panel, hourly_radiation, Number_groups, number_point
         result[group] = np.vectorize(Calc_PV_power)(results[0], results[1], eff_nom, areagroup, Bref,misc_losses)
         areagroups[group] = areagroup
 
-        Sum_PV = Sum_PV + result[group]
+        Sum_PV = Sum_PV + resu lt[group]
 
     Final = pd.DataFrame({'PV_kWh':Sum_PV,'Area':sum(areagroups)})
     return result, Final
@@ -119,22 +138,25 @@ def Calc_diffuseground_comp(tilt_radians):
 
 def Calc_Sm_PV(te, I_sol, I_direct, I_diffuse, tilt, Sz, teta, tetad, tetaeg,
                n, Pg, K, NOCT, a0, a1, a2, a3, a4, L):
+
     """
 
     Parameters
     ----------
-    te
+    te: Dry bulb temperature
     I_sol
     I_direct
     I_diffuse
-    tilt
-    Sz
-    teta
-    tetad
-    tetaeg
-    n
-    Pg
-    K
+    tilt: tilt angle [degree]
+    Sz: Zenith angle [degree]
+    teta: Incident angle [degree]
+    tetad: hour angle
+    tetaeg:
+    n: refractive index of galss
+    Pg: ground reflectance
+    K: extinction coefficient
+
+    PV panel properties:
     NOCT
     a0
     a1
@@ -147,8 +169,6 @@ def Calc_Sm_PV(te, I_sol, I_direct, I_diffuse, tilt, Sz, teta, tetad, tetaeg,
     -------
 
     """
-    # ha is local solar time
-
 
     # calcualte ratio of beam radiation on a tilted plane
     # to avoid inconvergence when I_sol = 0
